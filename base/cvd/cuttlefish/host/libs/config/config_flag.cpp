@@ -38,14 +38,10 @@
 #include "cuttlefish/common/libs/utils/flag_parser.h"
 #include "cuttlefish/common/libs/utils/json.h"
 #include "cuttlefish/common/libs/utils/result.h"
-#include "cuttlefish/host/commands/assemble_cvd/flags_defaults.h"
+#include "cuttlefish/host/commands/assemble_cvd/flags/system_image_dir.h"
 #include "cuttlefish/host/libs/config/config_utils.h"
 #include "cuttlefish/host/libs/config/cuttlefish_config.h"
 #include "cuttlefish/host/libs/feature/feature.h"
-
-// To support other files that use this from gflags.
-// TODO: Add a description to this flag
-DEFINE_string(system_image_dir, CF_DEFAULTS_SYSTEM_IMAGE_DIR, "");
 
 using gflags::FlagSettingMode::SET_FLAGS_DEFAULT;
 using android::base::ReadFileToString;
@@ -54,35 +50,6 @@ using android::base::Split;
 namespace cuttlefish {
 
 namespace {
-
-class SystemImageDirFlagImpl : public SystemImageDirFlag {
- public:
-  INJECT(SystemImageDirFlagImpl()) {
-    auto help = "Location of the system partition images.";
-    flag_ = GflagsCompatFlag("system_image_dir", path_).Help(help);
-  }
-  const std::string& Path() override { return path_; }
-
-  std::string Name() const override { return "SystemImageDirFlagImpl"; }
-  std::unordered_set<FlagFeature*> Dependencies() const override { return {}; }
-  Result<void> Process(std::vector<std::string>& args) override {
-    path_ = DefaultGuestImagePath("");
-    CF_EXPECT(flag_.Parse(args));
-    // To support other files that use this from gflags.
-    FLAGS_system_image_dir = path_;
-    gflags::SetCommandLineOptionWithMode("system_image_dir", path_.c_str(),
-                                         SET_FLAGS_DEFAULT);
-    return {};
-  }
-  bool WriteGflagsCompatHelpXml(std::ostream&) const override {
-    // TODO(schuffelen): Write something here when this is removed from gflags
-    return true;
-  }
-
- private:
-  std::string path_;
-  Flag flag_;
-};
 
 class ConfigReader : public FlagFeature {
  public:
@@ -127,7 +94,7 @@ class ConfigReader : public FlagFeature {
 
 class ConfigFlagImpl : public ConfigFlag {
  public:
-  INJECT(ConfigFlagImpl(ConfigReader& cr, SystemImageDirFlag& s))
+  INJECT(ConfigFlagImpl(ConfigReader& cr, SystemImageDir& s))
       : config_reader_(cr), system_image_dir_flag_(s) {
     is_default_ = true;
     config_ = "phone";  // default value
@@ -148,7 +115,6 @@ class ConfigFlagImpl : public ConfigFlag {
   std::unordered_set<FlagFeature*> Dependencies() const override {
     return {
         static_cast<FlagFeature*>(&config_reader_),
-        static_cast<FlagFeature*>(&system_image_dir_flag_),
     };
   }
   Result<void> Process(std::vector<std::string>& args) override {
@@ -189,9 +155,8 @@ class ConfigFlagImpl : public ConfigFlag {
     return {};
   }
   std::optional<std::string> FindAndroidInfoConfig() const {
-    auto info_path =
-        android::base::Split(system_image_dir_flag_.Path(), ",")[0] +
-        "/android-info.txt";
+    std::string info_path =
+        system_image_dir_flag_.ForIndex(0) + "/android-info.txt";
 
     LOG(INFO) << "Reading --config option from: " << info_path;
     if (!FileExists(info_path)) {
@@ -229,7 +194,7 @@ class ConfigFlagImpl : public ConfigFlag {
   }
 
   ConfigReader& config_reader_;
-  SystemImageDirFlag& system_image_dir_flag_;
+  SystemImageDir& system_image_dir_flag_;
   std::string config_;
   bool is_default_;
   Flag flag_;
@@ -247,13 +212,12 @@ class ConfigFlagPlaceholderImpl : public ConfigFlag {
 
 }  // namespace
 
-fruit::Component<SystemImageDirFlag, ConfigFlag> ConfigFlagComponent() {
+fruit::Component<fruit::Required<SystemImageDir>, ConfigFlag>
+ConfigFlagComponent() {
   return fruit::createComponent()
       .addMultibinding<FlagFeature, ConfigReader>()
       .bind<ConfigFlag, ConfigFlagImpl>()
-      .addMultibinding<FlagFeature, ConfigFlag>()
-      .bind<SystemImageDirFlag, SystemImageDirFlagImpl>()
-      .addMultibinding<FlagFeature, SystemImageDirFlag>();
+      .addMultibinding<FlagFeature, ConfigFlag>();
 }
 
 fruit::Component<ConfigFlag> ConfigFlagPlaceholder() {
