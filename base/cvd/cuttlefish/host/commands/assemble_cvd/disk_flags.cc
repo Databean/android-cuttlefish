@@ -170,9 +170,7 @@ namespace cuttlefish {
 
 using vm_manager::Gem5Manager;
 
-Result<void> ResolveInstanceFiles() {
-  SystemImageDir system_image_dir = CF_EXPECT(SystemImageDir::FromFlags());
-
+Result<void> ResolveInstanceFiles(const SystemImageDir& system_image_dir) {
   Use16k use_16k = Use16k::FromFlags();
   if (use_16k.use_16k()) {
     CF_EXPECT(FLAGS_kernel_path.empty(),
