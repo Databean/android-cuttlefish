@@ -33,7 +33,7 @@
 
 namespace cuttlefish {
 
-Result<HttpResponse<std::string>> HttpGetToFile(
+Result<TypedHttpResponse<std::string>> HttpGetToFile(
     HttpClient& http_client, const std::string& url, const std::string& path,
     const std::vector<std::string>& headers) {
   LOG(DEBUG) << "Saving '" << url << "' to '" << path << "'";
@@ -77,7 +77,7 @@ Result<HttpResponse<std::string>> HttpGetToFile(
       .headers = std::move(headers),
   };
 
-  HttpResponse<void> http_response =
+  HttpResponse http_response =
       CF_EXPECT(http_client.DownloadToCallback(request, callback));
 
   LOG(DEBUG) << "Downloaded '" << total_dl << "' total bytes from '" << url
@@ -91,11 +91,7 @@ Result<HttpResponse<std::string>> HttpGetToFile(
         "Unable to remove temporary file \"{}\"\nMay require manual removal",
         temp_path);
   }
-  return HttpResponse<std::string>{
-      .data = path,
-      .http_code = http_response.http_code,
-      .headers = std::move(http_response.headers),
-  };
+  return http_response.WithData(std::move(path));
 }
 
 }  // namespace cuttlefish

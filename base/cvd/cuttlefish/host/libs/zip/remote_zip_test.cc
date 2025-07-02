@@ -58,7 +58,7 @@ class HttpCallback {
     return HttpCallback(CF_EXPECT(ReadToString(source)));
   }
 
-  HttpResponse<std::string> operator()(const HttpRequest& request) {
+  TypedHttpResponse<std::string> operator()(const HttpRequest& request) {
     static constexpr std::string_view kPrefix = "Range: bytes=";
     std::string range;
     for (const std::string& header : request.headers) {
@@ -81,21 +81,18 @@ class HttpCallback {
     if (end > data_.size()) {
       end = data_.size();
     }
-    return HttpResponse<std::string>{
-        .data = data_.substr(start, end - start),
-        .http_code = 200,
-        .headers =
-            std::vector<HttpHeader>{
-                HttpHeader{
-                    .name = "content-length",
-                    .value = std::to_string(end - start),
-                },
-                HttpHeader{
-                    .name = "accepts-ranges",
-                    .value = "bytes",
-                },
-            },
+    std::vector<HttpHeader> headers{
+        HttpHeader{
+            .name = "content-length",
+            .value = std::to_string(end - start),
+        },
+        HttpHeader{
+            .name = "accepts-ranges",
+            .value = "bytes",
+        },
     };
+    return HttpResponse(200, std::move(headers))
+        .WithData(data_.substr(start, end - start));
   }
 
  private:

@@ -30,7 +30,7 @@ TEST(FakeHttpClientTest, WithoutUrlMatching) {
 
   http_client.SetResponse("abc");
 
-  Result<HttpResponse<std::string>> res =
+  Result<TypedHttpResponse<std::string>> res =
       HttpGetToString(http_client, "https://www.google.com");
 
   ASSERT_THAT(res, IsOk());
@@ -41,7 +41,7 @@ TEST(FakeHttpClientTest, WithoutUrlMatching) {
 TEST(FakeHttpClientTest, NoMatchingUrl) {
   FakeHttpClient http_client;
 
-  Result<HttpResponse<std::string>> res =
+  Result<TypedHttpResponse<std::string>> res =
       HttpGetToString(http_client, "https://www.google.com");
 
   ASSERT_THAT(res, IsOk());
@@ -54,9 +54,9 @@ TEST(FakeHttpClientTest, ChoosesUrl) {
   http_client.SetResponse("abc", "https://www.google.com");
   http_client.SetResponse("def", "https://www.google.com/path");
 
-  Result<HttpResponse<std::string>> broad =
+  Result<TypedHttpResponse<std::string>> broad =
       HttpGetToString(http_client, "https://www.google.com/other/");
-  Result<HttpResponse<std::string>> narrow =
+  Result<TypedHttpResponse<std::string>> narrow =
       HttpGetToString(http_client, "https://www.google.com/path/");
 
   ASSERT_THAT(broad, IsOk());
@@ -73,10 +73,10 @@ TEST(FakeHttpClientTest, InvokesCallback) {
   FakeHttpClient http_client;
 
   http_client.SetResponse([](const HttpRequest& req) {
-    return HttpResponse<std::string>{.data = req.url, .http_code = 200};
+    return HttpResponse(200, {}).WithData(req.url);
   });
 
-  Result<HttpResponse<std::string>> res =
+  Result<TypedHttpResponse<std::string>> res =
       HttpGetToString(http_client, "https://www.google.com");
 
   ASSERT_THAT(res, IsOk());

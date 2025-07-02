@@ -35,9 +35,9 @@ class ServerErrorRetryClient : public HttpClient {
         retry_attempts_(retry_attempts),
         retry_delay_(retry_delay) {}
 
-  Result<HttpResponse<void>> DownloadToCallback(
-      HttpRequest request, DataCallback callback) override {
-    HttpResponse<void> response;
+  Result<HttpResponse> DownloadToCallback(HttpRequest request,
+                                          DataCallback callback) override {
+    HttpResponse response;
     for (int attempt = 0; attempt != retry_attempts_; ++attempt) {
       if (attempt != 0) {
         std::this_thread::sleep_for(retry_delay_);

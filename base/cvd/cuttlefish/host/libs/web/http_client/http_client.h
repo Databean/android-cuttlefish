@@ -15,14 +15,13 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <vector>
-
-#include <fmt/format.h>
 
 #include "cuttlefish/common/libs/utils/result.h"
 
@@ -36,36 +35,42 @@ struct HttpHeader {
 };
 
 template <typename T>
+struct TypedHttpResponse;
+
 struct HttpResponse {
-  bool HttpInfo() const { return http_code >= 100 && http_code <= 199; }
-  bool HttpSuccess() const { return http_code >= 200 && http_code <= 299; }
-  bool HttpRedirect() const { return http_code >= 300 && http_code <= 399; }
-  bool HttpClientError() const { return http_code >= 400 && http_code <= 499; }
-  bool HttpServerError() const { return http_code >= 500 && http_code <= 599; }
+  HttpResponse() = default;
+  explicit HttpResponse(uint64_t http_code, std::vector<HttpHeader> headers);
 
-  std::string StatusDescription() const {
-    switch (http_code) {
-        case 200: return "OK";
-        case 201: return "Created";
-        case 204: return "No Content";
-        case 400: return "Bad Request";
-        case 401: return "Unauthorized";
-        case 403: return "Forbidden";
-        case 404: return "File Not Found";
-        case 500: return "Internal Server Error";
-        case 502: return "Bad Gateway";
-        case 503: return "Service Unavailable";
-        default: return fmt::format("Status Code: {}", http_code);
-    }
-  }
+  bool HttpInfo() const;
+  bool HttpSuccess() const;
+  bool HttpRedirect() const;
+  bool HttpClientError() const;
+  bool HttpServerError() const;
 
-  typename std::conditional<std::is_void_v<T>, HttpVoidResponse, T>::type data;
+  std::string StatusDescription() const;
+
+  std::optional<std::string_view> HeaderValue(
+      std::string_view header_name) const;
+
+  template <typename T>
+  TypedHttpResponse<T> WithData(T data);
+
   long http_code;
   std::vector<HttpHeader> headers;
 };
 
-std::optional<std::string_view> HeaderValue(
-    const std::vector<HttpHeader>& headers, std::string_view header_name);
+template <typename T>
+struct TypedHttpResponse : public HttpResponse {
+  TypedHttpResponse(HttpResponse response, T data)
+      : HttpResponse(std::move(response)), data(std::move(data)) {}
+
+  T data;
+};
+
+template <typename T>
+TypedHttpResponse<T> HttpResponse::WithData(T data) {
+  return TypedHttpResponse(*this, std::move(data));
+}
 
 enum class HttpMethod {
   kGet,
@@ -88,8 +93,8 @@ class HttpClient {
   virtual ~HttpClient();
 
   // Returns response's status code.
-  virtual Result<HttpResponse<void>> DownloadToCallback(
-      HttpRequest, DataCallback callback) = 0;
+  virtual Result<HttpResponse> DownloadToCallback(HttpRequest,
+                                                  DataCallback callback) = 0;
 };
 
 }  // namespace cuttlefish

@@ -33,13 +33,13 @@ namespace cuttlefish {
 //   "error": "Failed to parse json",
 //   "response: "<THE RESPONSE BODY>"
 // }
-Result<HttpResponse<Json::Value>> HttpPostToJson(
+Result<TypedHttpResponse<Json::Value>> HttpPostToJson(
     HttpClient&, const std::string& url, const std::string& data,
     const std::vector<std::string>& headers = {});
-Result<HttpResponse<Json::Value>> HttpPostToJson(
+Result<TypedHttpResponse<Json::Value>> HttpPostToJson(
     HttpClient&, const std::string& url, const Json::Value& data,
     const std::vector<std::string>& headers = {});
-Result<HttpResponse<Json::Value>> HttpGetToJson(
+Result<TypedHttpResponse<Json::Value>> HttpGetToJson(
     HttpClient&, const std::string& url,
     const std::vector<std::string>& headers = {});
 

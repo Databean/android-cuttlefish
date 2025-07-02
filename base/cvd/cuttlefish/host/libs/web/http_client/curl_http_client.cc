@@ -114,8 +114,8 @@ class CurlClient : public HttpClient {
   }
   ~CurlClient() { curl_easy_cleanup(curl_); }
 
-  Result<HttpResponse<void>> DownloadToCallback(
-      HttpRequest request, DataCallback callback) override {
+  Result<HttpResponse> DownloadToCallback(HttpRequest request,
+                                          DataCallback callback) override {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG(DEBUG) << "Downloading '" << request.url << "'";
     CF_EXPECT(
@@ -175,8 +175,7 @@ class CurlClient : public HttpClient {
       });
     }
 
-    return HttpResponse<void>{
-        .data = {}, .http_code = http_code, .headers = std::move(headers)};
+    return HttpResponse(http_code, std::move(headers));
   }
 
  private:

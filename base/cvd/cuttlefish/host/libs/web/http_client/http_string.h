@@ -23,10 +23,10 @@
 
 namespace cuttlefish {
 
-Result<HttpResponse<std::string>> HttpGetToString(
+Result<TypedHttpResponse<std::string>> HttpGetToString(
     HttpClient&, const std::string& url,
     const std::vector<std::string>& headers = {});
-Result<HttpResponse<std::string>> HttpPostToString(
+Result<TypedHttpResponse<std::string>> HttpPostToString(
     HttpClient&, const std::string& url, const std::string& data,
     const std::vector<std::string>& headers = {});
 

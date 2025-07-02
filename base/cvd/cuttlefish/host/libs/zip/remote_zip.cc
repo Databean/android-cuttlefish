@@ -73,8 +73,7 @@ class RemoteZip : public SeekableZipSourceCallback {
         .url = url_,
         .headers = headers,
     };
-    Result<HttpResponse<void>> res =
-        http_client_.DownloadToCallback(request, cb);
+    Result<HttpResponse> res = http_client_.DownloadToCallback(request, cb);
     if (!res.ok() || !res->HttpSuccess() || already_read != zip_len) {
       errno = EIO;
       return -1;
@@ -105,14 +104,14 @@ Result<uint64_t> GetSizeIfSupportsRangeRequests(
       .headers = headers,
   };
   auto empty_cb = [](char*, size_t) { return true; };
-  HttpResponse<void> http_response =
+  HttpResponse http_response =
       CF_EXPECT(http_client_.DownloadToCallback(request, empty_cb));
   std::string_view ranges_header =
-      CF_EXPECT(HeaderValue(http_response.headers, "accepts-ranges"));
+      CF_EXPECT(http_response.HeaderValue("accepts-ranges"));
   CF_EXPECT_NE(ranges_header.find("bytes"), std::string_view::npos);
 
   std::string_view content_length_str =
-      CF_EXPECT(HeaderValue(http_response.headers, "content-length"));
+      CF_EXPECT(http_response.HeaderValue("content-length"));
 
   uint64_t content_length;
   CF_EXPECT(absl::SimpleAtoi(content_length_str, &content_length));

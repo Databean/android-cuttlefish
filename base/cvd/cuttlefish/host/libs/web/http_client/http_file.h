@@ -23,7 +23,7 @@
 
 namespace cuttlefish {
 
-Result<HttpResponse<std::string>> HttpGetToFile(
+Result<TypedHttpResponse<std::string>> HttpGetToFile(
     HttpClient&, const std::string& url, const std::string& path,
     const std::vector<std::string>& headers = {});
 

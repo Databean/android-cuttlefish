@@ -28,14 +28,15 @@ namespace cuttlefish {
 
 class FakeHttpClient : public HttpClient {
  public:
-  using Handler = std::function<HttpResponse<std::string>(const HttpRequest&)>;
+  using Handler =
+      std::function<TypedHttpResponse<std::string>(const HttpRequest&)>;
 
   // The longest string that is a complete substring of `url` is used to match
   // requests.
   void SetResponse(std::string data, std::string url = "");
   void SetResponse(Handler handler, std::string url = "");
   // Returns response's status code.
-  Result<HttpResponse<void>> DownloadToCallback(
+  Result<HttpResponse> DownloadToCallback(
       HttpRequest request, HttpClient::DataCallback callback) override;
 
  private:

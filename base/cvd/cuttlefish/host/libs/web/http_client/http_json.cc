@@ -31,31 +31,27 @@
 namespace cuttlefish {
 namespace {
 
-HttpResponse<Json::Value> Parse(HttpResponse<std::string> response) {
+TypedHttpResponse<Json::Value> Parse(TypedHttpResponse<std::string> response) {
   Result<Json::Value> result = ParseJson(response.data);
   if (!result.ok()) {
     Json::Value error_json;
     LOG(ERROR) << "Could not parse json: " << result.error().FormatForEnv();
     error_json["error"] = "Failed to parse json: " + result.error().Message();
     error_json["response"] = response.data;
-    return HttpResponse<Json::Value>{.data = error_json,
-                                     .http_code = response.http_code,
-                                     .headers = std::move(response.headers)};
+    return response.WithData(std::move(error_json));
   }
-  return HttpResponse<Json::Value>{.data = *result,
-                                   .http_code = response.http_code,
-                                   .headers = std::move(response.headers)};
+  return response.WithData(std::move(*result));
 }
 
 }  // namespace
 
-Result<HttpResponse<Json::Value>> HttpPostToJson(
+Result<TypedHttpResponse<Json::Value>> HttpPostToJson(
     HttpClient& http_client, const std::string& url, const std::string& data,
     const std::vector<std::string>& headers) {
   return Parse(CF_EXPECT(HttpPostToString(http_client, url, data, headers)));
 }
 
-Result<HttpResponse<Json::Value>> HttpPostToJson(
+Result<TypedHttpResponse<Json::Value>> HttpPostToJson(
     HttpClient& http_client, const std::string& url, const Json::Value& data,
     const std::vector<std::string>& headers) {
   std::stringstream json_str;
@@ -64,7 +60,7 @@ Result<HttpResponse<Json::Value>> HttpPostToJson(
       CF_EXPECT(HttpPostToString(http_client, url, json_str.str(), headers)));
 }
 
-Result<HttpResponse<Json::Value>> HttpGetToJson(
+Result<TypedHttpResponse<Json::Value>> HttpGetToJson(
     HttpClient& http_client, const std::string& url,
     const std::vector<std::string>& headers) {
   return Parse(CF_EXPECT(HttpGetToString(http_client, url, headers)));

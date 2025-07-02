@@ -26,11 +26,8 @@
 namespace cuttlefish {
 
 void FakeHttpClient::SetResponse(std::string data, std::string url) {
-  HttpResponse<std::string> res = {
-      .data = data,
-      .http_code = 200,
-      .headers = {},
-  };
+  TypedHttpResponse<std::string> res =
+      HttpResponse(200, {}).WithData(std::move(data));
   auto handler = [res = std::move(res)](const HttpRequest&) { return res; };
   SetResponse(std::move(handler), std::move(url));
 }
@@ -57,21 +54,17 @@ const FakeHttpClient::Handler* FakeHttpClient::FindHandler(
   return best_handler;
 }
 
-Result<HttpResponse<void>> FakeHttpClient::DownloadToCallback(
+Result<HttpResponse> FakeHttpClient::DownloadToCallback(
     HttpRequest request, HttpClient::DataCallback callback) {
   std::lock_guard lock(mutex_);
   CF_EXPECT(callback(nullptr, 0));
   const Handler* handler = FindHandler(request.url);
-  HttpResponse<void> response;
   if (!handler) {
-    response.http_code = 404;
-    return response;
+    return HttpResponse(404, {});
   }
-  HttpResponse<std::string> handler_res = (*handler)(request);
+  TypedHttpResponse<std::string> handler_res = (*handler)(request);
   CF_EXPECT(callback(handler_res.data.data(), handler_res.data.size()));
-  response.http_code = handler_res.http_code;
-  response.headers = std::move(handler_res.headers);
-  return response;
+  return handler_res;
 }
 
 }  // namespace cuttlefish

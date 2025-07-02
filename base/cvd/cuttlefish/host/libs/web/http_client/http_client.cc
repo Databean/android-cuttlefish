@@ -17,10 +17,15 @@
 
 #include <ctype.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <optional>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
+
+#include <fmt/core.h>
 
 namespace cuttlefish {
 namespace {
@@ -39,10 +44,54 @@ bool EqualsCaseInsensitive(const std::string_view a, const std::string_view b) {
 
 }  // namespace
 
-HttpClient::~HttpClient() = default;
+HttpResponse::HttpResponse(uint64_t http_code, std::vector<HttpHeader> headers)
+    : http_code(http_code), headers(std::move(headers)) {}
 
-std::optional<std::string_view> HeaderValue(
-    const std::vector<HttpHeader>& headers, std::string_view header_name) {
+bool HttpResponse::HttpInfo() const {
+  return http_code >= 100 && http_code <= 199;
+}
+bool HttpResponse::HttpSuccess() const {
+  return http_code >= 200 && http_code <= 299;
+}
+bool HttpResponse::HttpRedirect() const {
+  return http_code >= 300 && http_code <= 399;
+}
+bool HttpResponse::HttpClientError() const {
+  return http_code >= 400 && http_code <= 499;
+}
+bool HttpResponse::HttpServerError() const {
+  return http_code >= 500 && http_code <= 599;
+}
+
+std::string HttpResponse::StatusDescription() const {
+  switch (http_code) {
+    case 200:
+      return "OK";
+    case 201:
+      return "Created";
+    case 204:
+      return "No Content";
+    case 400:
+      return "Bad Request";
+    case 401:
+      return "Unauthorized";
+    case 403:
+      return "Forbidden";
+    case 404:
+      return "File Not Found";
+    case 500:
+      return "Internal Server Error";
+    case 502:
+      return "Bad Gateway";
+    case 503:
+      return "Service Unavailable";
+    default:
+      return fmt::format("Status Code: {}", http_code);
+  }
+}
+
+std::optional<std::string_view> HttpResponse::HeaderValue(
+    std::string_view header_name) const {
   for (const HttpHeader& header : headers) {
     if (EqualsCaseInsensitive(header.name, header_name)) {
       return header.value;
@@ -50,5 +99,7 @@ std::optional<std::string_view> HeaderValue(
   }
   return std::nullopt;
 }
+
+HttpClient::~HttpClient() = default;
 
 }  // namespace cuttlefish
