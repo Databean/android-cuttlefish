@@ -133,6 +133,7 @@ cf_cc_library(
         "//cuttlefish/host/commands/cvd/fetch:host_tools_target",
         "//cuttlefish/host/commands/cvd/fetch:substitute",
         "//cuttlefish/host/commands/cvd/fetch:target_directories",
+        "//cuttlefish/host/commands/cvd/fetch:tracing_build_api",
         "//cuttlefish/host/libs/config:fetcher_config",
         "//cuttlefish/host/libs/image_aggregator:sparse_image",
         "//cuttlefish/host/libs/web:android_build",
@@ -195,7 +196,6 @@ cf_cc_library(
     hdrs = ["host_package.h"],
     deps = [
         "//cuttlefish/common/libs/utils:archive",
-        "//cuttlefish/common/libs/utils:files",
         "//cuttlefish/common/libs/utils:result",
         "//cuttlefish/host/commands/cvd/fetch:fetch_tracer",
         "//cuttlefish/host/commands/cvd/fetch:substitute",
@@ -249,6 +249,22 @@ cf_cc_library(
     hdrs = ["target_directories.h"],
     deps = [
         "//cuttlefish/host/commands/cvd/fetch:get_optional",
+    ],
+)
+
+cf_cc_library(
+    name = "tracing_build_api",
+    srcs = ["tracing_build_api.cc"],
+    hdrs = ["tracing_build_api.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:files",
+        "//cuttlefish/common/libs/utils:result",
+        "//cuttlefish/host/commands/cvd/fetch:fetch_tracer",
+        "//cuttlefish/host/libs/web:android_build",
+        "//cuttlefish/host/libs/web:android_build_string",
+        "//cuttlefish/host/libs/web:build_api",
+        "//cuttlefish/host/libs/zip:zip_cc",
+        "@fmt",
     ],
 )
 

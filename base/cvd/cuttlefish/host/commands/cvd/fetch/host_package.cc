@@ -25,7 +25,6 @@
 #include <android-base/strings.h>
 
 #include "cuttlefish/common/libs/utils/archive.h"
-#include "cuttlefish/common/libs/utils/files.h"
 #include "cuttlefish/common/libs/utils/result.h"
 #include "cuttlefish/host/commands/cvd/fetch/fetch_tracer.h"
 #include "cuttlefish/host/commands/cvd/fetch/substitute.h"
@@ -50,7 +49,6 @@ Result<void> FetchHostPackage(
   auto host_tools_name = GetFilepath(build).value_or("cvd-host_package.tar.gz");
   std::string host_tools_filepath =
       CF_EXPECT(build_api.DownloadFile(build, target_dir, host_tools_name));
-  trace.CompletePhase("Download", FileSize(host_tools_filepath));
 
   CF_EXPECT(
       ExtractArchiveContents(host_tools_filepath, target_dir, keep_archives));

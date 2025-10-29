@@ -44,6 +44,7 @@
 #include "cuttlefish/host/commands/cvd/fetch/host_package.h"
 #include "cuttlefish/host/commands/cvd/fetch/host_tools_target.h"
 #include "cuttlefish/host/commands/cvd/fetch/target_directories.h"
+#include "cuttlefish/host/commands/cvd/fetch/tracing_build_api.h"
 #include "cuttlefish/host/libs/config/fetcher_config.h"
 #include "cuttlefish/host/libs/image_aggregator/sparse_image.h"
 #include "cuttlefish/host/libs/web/android_build.h"
@@ -213,7 +214,6 @@ Result<void> FetchDefaultTarget(BuildApi& build_api, const Builds& builds,
   // fetching misc_info.txt
   Result<std::string> misc_info_result = build_api.DownloadFile(
       *builds.default_build, target_directories.root, "misc_info.txt");
-  trace.CompletePhase("Download misc_info.txt");
   if (misc_info_result.ok()) {
     CF_EXPECT(config.AddFilesToConfig(
         FileSource::DEFAULT_BUILD, default_build_id, default_build_target,
@@ -225,8 +225,6 @@ Result<void> FetchDefaultTarget(BuildApi& build_api, const Builds& builds,
     std::string img_zip_name = GetBuildZipName(*builds.default_build, "img");
     std::string default_img_zip_filepath = CF_EXPECT(build_api.DownloadFile(
         *builds.default_build, target_directories.root, img_zip_name));
-    trace.CompletePhase("Download image zip",
-                        FileSize(default_img_zip_filepath));
     std::vector<std::string> image_files = CF_EXPECT(
         ExtractImageContents(default_img_zip_filepath, target_directories.root,
                              keep_downloaded_archives));
@@ -250,7 +248,6 @@ Result<void> FetchDefaultTarget(BuildApi& build_api, const Builds& builds,
     target_files = CF_EXPECT(build_api.DownloadFile(
         *builds.default_build, target_directories.default_target_files,
         target_files_name));
-    trace.CompletePhase("Download Target Files");
     LOG(INFO) << "Adding target files for default build";
     CF_EXPECT(config.AddFilesToConfig(
         FileSource::DEFAULT_BUILD, default_build_id, default_build_target,
@@ -307,7 +304,6 @@ Result<void> FetchSystemTarget(BuildApi& build_api, const Build& system_build,
       GetBuildZipName(system_build, "target_files");
   std::string target_files = CF_EXPECT(build_api.DownloadFile(
       system_build, target_directories.system_target_files, target_files_name));
-  trace.CompletePhase("Download Target Files", FileSize(target_files_name));
   const auto [system_id, system_target] = GetBuildIdAndTarget(system_build);
   CF_EXPECT(config.AddFilesToConfig(FileSource::SYSTEM_BUILD, system_id,
                                     system_target, {target_files},
@@ -399,21 +395,17 @@ Result<void> FetchKernelTarget(BuildApi& build_api, const Build& kernel_build,
   std::string downloaded_kernel_filepath =
       CF_EXPECT(build_api.DownloadFileWithBackup(kernel_build, target_directory,
                                                  "bzImage", "Image"));
-  trace.CompletePhase("Download bzImage", FileSize(downloaded_kernel_filepath));
   CF_EXPECT(RenameFile(downloaded_kernel_filepath, kernel_filepath));
   const auto [kernel_id, kernel_target] = GetBuildIdAndTarget(kernel_build);
   CF_EXPECT(config.AddFilesToConfig(FileSource::KERNEL_BUILD, kernel_id,
                                     kernel_target, {kernel_filepath},
                                     target_directory));
   DeAndroidSparse2({kernel_filepath});
-  trace.CompletePhase("Desparse bzImage");
 
   // Certain kernel builds do not have corresponding ramdisks.
   Result<std::string> initramfs_img_result =
       build_api.DownloadFile(kernel_build, target_directory, "initramfs.img");
   if (initramfs_img_result.ok()) {
-    trace.CompletePhase("Download initramfs",
-                        FileSize(initramfs_img_result.value()));
     CF_EXPECT(config.AddFilesToConfig(
         FileSource::KERNEL_BUILD, kernel_id, kernel_target,
         {initramfs_img_result.value()}, target_directory));
@@ -436,7 +428,6 @@ Result<void> FetchBootTarget(BuildApi& build_api, const Build& boot_build,
     downloaded_boot_filepath = CF_EXPECT(build_api.DownloadFile(
         boot_build, target_directory, boot_img_zip_name));
   }
-  trace.CompletePhase("Download", FileSize(downloaded_boot_filepath));
 
   std::vector<std::string> boot_files;
   // downloaded a zip that needs to be extracted
@@ -481,7 +472,6 @@ Result<void> FetchBootloaderTarget(BuildApi& build_api,
   std::string downloaded_bootloader_filepath =
       CF_EXPECT(build_api.DownloadFileWithBackup(
           bootloader_build, target_directory, "u-boot.rom", "u-boot.bin"));
-  trace.CompletePhase("Download", FileSize(downloaded_bootloader_filepath));
   CF_EXPECT(RenameFile(downloaded_bootloader_filepath, bootloader_filepath));
   const auto [bootloader_id, bootloader_target] =
       GetBuildIdAndTarget(bootloader_build);
@@ -507,8 +497,6 @@ Result<void> FetchAndroidEfiLoaderTarget(BuildApi& build_api,
       CF_EXPECT(build_api.DownloadFile(
           android_efi_loader_build, target_directory,
           android_efi_loader_filepath.value_or("gbl_x86_64.efi")));
-  trace.CompletePhase("Download",
-                      FileSize(downloaded_android_efi_loader_filepath));
   CF_EXPECT(RenameFile(downloaded_android_efi_loader_filepath,
                        android_efi_loader_target_filepath));
 
@@ -531,7 +519,6 @@ Result<void> FetchOtaToolsTarget(BuildApi& build_api,
                                  FetchTracer::Trace trace) {
   std::string otatools_filepath = CF_EXPECT(build_api.DownloadFile(
       otatools_build, target_directories.root, "otatools.zip"));
-  trace.CompletePhase("Download", FileSize(otatools_filepath));
   std::vector<std::string> ota_tools_files = CF_EXPECT(
       ExtractArchiveContents(otatools_filepath, target_directories.otatools,
                              keep_downloaded_archives));
@@ -577,45 +564,57 @@ Result<void> FetchTarget(BuildApi& build_api, LuciBuildApi& luci_build_api,
                          const bool keep_downloaded_archives,
                          FetcherConfig& config, FetchTracer& tracer) {
   if (builds.default_build) {
-    CF_EXPECT(FetchDefaultTarget(build_api, builds, target_directories, flags,
-                                 keep_downloaded_archives, config,
-                                 tracer.NewTrace("Default")));
+    FetchTracer::Trace trace = tracer.NewTrace("Default");
+    TracingBuildApi tracing_build_api(build_api, trace);
+    CF_EXPECT(FetchDefaultTarget(tracing_build_api, builds, target_directories,
+                                 flags, keep_downloaded_archives, config,
+                                 trace));
   }
 
   if (builds.system) {
-    CF_EXPECT(FetchSystemTarget(
-        build_api, *builds.system, target_directories, flags.download_img_zip,
-        keep_downloaded_archives, config, tracer.NewTrace("System")));
+    FetchTracer::Trace trace = tracer.NewTrace("System");
+    TracingBuildApi tracing_build_api(build_api, trace);
+    CF_EXPECT(FetchSystemTarget(tracing_build_api, *builds.system,
+                                target_directories, flags.download_img_zip,
+                                keep_downloaded_archives, config, trace));
   }
 
   if (builds.kernel) {
-    CF_EXPECT(FetchKernelTarget(build_api, *builds.kernel,
-                                target_directories.root, config,
-                                tracer.NewTrace("Kernel")));
+    FetchTracer::Trace trace = tracer.NewTrace("Kernel");
+    TracingBuildApi tracing_build_api(build_api, trace);
+    CF_EXPECT(FetchKernelTarget(tracing_build_api, *builds.kernel,
+                                target_directories.root, config, trace));
   }
 
   if (builds.boot) {
-    CF_EXPECT(FetchBootTarget(build_api, *builds.boot, target_directories.root,
-                              keep_downloaded_archives, config,
-                              tracer.NewTrace("Boot")));
+    FetchTracer::Trace trace = tracer.NewTrace("Boot");
+    TracingBuildApi tracing_build_api(build_api, trace);
+    CF_EXPECT(FetchBootTarget(tracing_build_api, *builds.boot,
+                              target_directories.root, keep_downloaded_archives,
+                              config, trace));
   }
 
   if (builds.bootloader) {
-    CF_EXPECT(FetchBootloaderTarget(build_api, *builds.bootloader,
-                                    target_directories.root, config,
-                                    tracer.NewTrace("Bootloader")));
+    FetchTracer::Trace trace = tracer.NewTrace("Bootloader");
+    TracingBuildApi tracing_build_api(build_api, trace);
+    CF_EXPECT(FetchBootloaderTarget(tracing_build_api, *builds.bootloader,
+                                    target_directories.root, config, trace));
   }
 
   if (builds.android_efi_loader) {
+    FetchTracer::Trace trace = tracer.NewTrace("Android EFI Loader");
+    TracingBuildApi tracing_build_api(build_api, trace);
     CF_EXPECT(FetchAndroidEfiLoaderTarget(
-        build_api, *builds.android_efi_loader, target_directories.root, config,
-        tracer.NewTrace("Android EFI Loader")));
+        tracing_build_api, *builds.android_efi_loader, target_directories.root,
+        config, trace));
   }
 
   if (builds.otatools) {
-    CF_EXPECT(FetchOtaToolsTarget(build_api, *builds.otatools,
+    FetchTracer::Trace trace = tracer.NewTrace("OTA Tools");
+    TracingBuildApi tracing_build_api(build_api, trace);
+    CF_EXPECT(FetchOtaToolsTarget(tracing_build_api, *builds.otatools,
                                   target_directories, keep_downloaded_archives,
-                                  config, tracer.NewTrace("OTA Tools")));
+                                  config, trace));
   }
 
   if (builds.chrome_os) {
@@ -651,10 +650,12 @@ Result<std::vector<FetchResult>> Fetch(const FetchFlags& flags,
       downloaders.AndroidBuild(), host_target, fallback_host_build));
   prefetch_trace.CompletePhase("GetBuilds");
 
+  FetchTracer::Trace host_trace = tracer.NewTrace("Host Package");
+  TracingBuildApi host_tracing_build_api(downloaders.AndroidBuild(),
+                                         host_trace);
   auto host_package_future = std::async(
-      std::launch::async, FetchHostPackage,
-      std::ref(downloaders.AndroidBuild()), std::cref(host_target_build),
-      std::cref(host_target.host_tools_directory),
+      std::launch::async, FetchHostPackage, std::ref(host_tracing_build_api),
+      std::cref(host_target_build), std::cref(host_target.host_tools_directory),
       std::cref(flags.keep_downloaded_archives),
       std::cref(flags.host_substitutions), tracer.NewTrace("Host Package"));
   size_t count = 1;
