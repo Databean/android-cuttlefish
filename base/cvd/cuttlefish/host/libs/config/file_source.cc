@@ -50,29 +50,30 @@ FileSource SourceStringToEnum(std::string source) {
   }
 }
 
-std::string SourceEnumToString(const FileSource& source) {
-  if (source == FileSource::DEFAULT_BUILD) {
-    return "default_build";
-  } else if (source == FileSource::SYSTEM_BUILD) {
-    return "system_build";
-  } else if (source == FileSource::KERNEL_BUILD) {
-    return "kernel_build";
-  } else if (source == FileSource::LOCAL_FILE) {
-    return "local_file";
-  } else if (source == FileSource::GENERATED) {
-    return "generated";
-  } else if (source == FileSource::BOOTLOADER_BUILD) {
-    return "bootloader_build";
-  } else if (source == FileSource::ANDROID_EFI_LOADER_BUILD) {
-    return "android_efi_loader_build";
-  } else if (source == FileSource::BOOT_BUILD) {
-    return "boot_build";
-  } else if (source == FileSource::HOST_PACKAGE_BUILD) {
-    return "host_package_build";
-  } else if (source == FileSource::CHROME_OS_BUILD) {
-    return "chrome_os_build";
-  } else {
-    return "unknown";
+std::string SourceEnumToString(FileSource source) {
+  switch (source) {
+    case FileSource::DEFAULT_BUILD:
+      return "default_build";
+    case FileSource::SYSTEM_BUILD:
+      return "system_build";
+    case FileSource::KERNEL_BUILD:
+      return "kernel_build";
+    case FileSource::LOCAL_FILE:
+      return "local_file";
+    case FileSource::GENERATED:
+      return "generated";
+    case FileSource::BOOTLOADER_BUILD:
+      return "bootloader_build";
+    case FileSource::ANDROID_EFI_LOADER_BUILD:
+      return "android_efi_loader_build";
+    case FileSource::BOOT_BUILD:
+      return "boot_build";
+    case FileSource::HOST_PACKAGE_BUILD:
+      return "host_package_build";
+    case FileSource::CHROME_OS_BUILD:
+      return "chrome_os_build";
+    default:
+      return "unknown";
   }
 }
 

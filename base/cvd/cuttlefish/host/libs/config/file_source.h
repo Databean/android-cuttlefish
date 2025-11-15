@@ -35,6 +35,6 @@ enum class FileSource {
 };
 
 FileSource SourceStringToEnum(std::string source);
-std::string SourceEnumToString(const FileSource& source);
+std::string SourceEnumToString(FileSource source);
 
 }  // namespace cuttlefish
