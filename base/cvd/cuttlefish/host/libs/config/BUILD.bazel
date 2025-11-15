@@ -1,4 +1,4 @@
-load("//cuttlefish/bazel:rules.bzl", "cf_cc_library")
+load("//cuttlefish/bazel:rules.bzl", "cf_cc_library", "cf_cc_test")
 
 package(
     default_visibility = ["//:android_cuttlefish"],
@@ -201,6 +201,16 @@ cf_cc_library(
     name = "file_source",
     srcs = ["file_source.cc"],
     hdrs = ["file_source.h"],
+)
+
+cf_cc_test(
+    name = "file_source_test",
+    srcs = ["file_source_test.cc"],
+    deps = [
+        "//cuttlefish/host/libs/config:file_source",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cf_cc_library(
