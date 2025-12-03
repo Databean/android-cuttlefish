@@ -33,6 +33,17 @@ cf_cc_library(
 )
 
 cf_cc_library(
+    name = "android_builds",
+    srcs = ["android_builds.cc"],
+    hdrs = ["android_builds.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:result",
+        "//cuttlefish/host/commands/assemble_cvd/android_build",
+        "@abseil-cpp//absl/strings:str_format",
+    ],
+)
+
+cf_cc_library(
     name = "image_provider",
     srcs = ["image_provider.cc"],
     hdrs = ["image_provider.h"],
