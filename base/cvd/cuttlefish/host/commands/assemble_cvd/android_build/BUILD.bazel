@@ -1,0 +1,16 @@
+load("//cuttlefish/bazel:rules.bzl", "cf_cc_library")
+
+package(
+    default_visibility = ["//:android_cuttlefish"],
+)
+
+exports_files([".clang-tidy"])
+
+cf_cc_library(
+    name = "partition_ab_status",
+    srcs = ["partition_ab_status.cc"],
+    hdrs = ["partition_ab_status.h"],
+    deps = [
+        "@fmt",
+    ],
+)
