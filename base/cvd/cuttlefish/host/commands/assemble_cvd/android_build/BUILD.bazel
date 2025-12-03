@@ -7,6 +7,21 @@ package(
 exports_files([".clang-tidy"])
 
 cf_cc_library(
+    name = "android_build_partition",
+    srcs = ["android_build_partition.cc"],
+    hdrs = ["android_build_partition.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:result",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_ab_status",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_availability",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_source",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_type",
+        "@abseil-cpp//absl/strings:str_format",
+        "@fmt",
+    ],
+)
+
+cf_cc_library(
     name = "partition_ab_status",
     srcs = ["partition_ab_status.cc"],
     hdrs = ["partition_ab_status.h"],
