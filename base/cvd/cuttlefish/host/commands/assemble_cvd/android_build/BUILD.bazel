@@ -7,6 +7,17 @@ package(
 exports_files([".clang-tidy"])
 
 cf_cc_library(
+    name = "android_build",
+    hdrs = ["android_build.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:result",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:image_provider",
+        "@abseil-cpp//absl/strings:str_format",
+        "@fmt",
+    ],
+)
+
+cf_cc_library(
     name = "android_build_partition",
     srcs = ["android_build_partition.cc"],
     hdrs = ["android_build_partition.h"],
