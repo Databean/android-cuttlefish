@@ -22,6 +22,17 @@ cf_cc_library(
 )
 
 cf_cc_library(
+    name = "image_provider",
+    srcs = ["image_provider.cc"],
+    hdrs = ["image_provider.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:result",
+        "@abseil-cpp//absl/strings:str_format",
+        "@fmt",
+    ],
+)
+
+cf_cc_library(
     name = "partition_ab_status",
     srcs = ["partition_ab_status.cc"],
     hdrs = ["partition_ab_status.h"],
