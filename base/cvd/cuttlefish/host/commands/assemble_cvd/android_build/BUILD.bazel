@@ -79,6 +79,24 @@ cf_cc_library(
 )
 
 cf_cc_library(
+    name = "identify_partitions",
+    srcs = ["identify_partitions.cc"],
+    hdrs = ["identify_partitions.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:result",
+        "//cuttlefish/host/commands/assemble_cvd/android_build",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:android_build_partition",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_ab_status",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_availability",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_source",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:partition_type",
+        "@abseil-cpp//absl/strings",
+        "@android_system_core//:liblp",
+        "@fmt",
+    ],
+)
+
+cf_cc_library(
     name = "image_provider",
     srcs = ["image_provider.cc"],
     hdrs = ["image_provider.h"],
