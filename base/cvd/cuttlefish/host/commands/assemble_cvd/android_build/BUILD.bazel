@@ -14,3 +14,12 @@ cf_cc_library(
         "@fmt",
     ],
 )
+
+cf_cc_library(
+    name = "partition_type",
+    srcs = ["partition_type.cc"],
+    hdrs = ["partition_type.h"],
+    deps = [
+        "@fmt",
+    ],
+)
