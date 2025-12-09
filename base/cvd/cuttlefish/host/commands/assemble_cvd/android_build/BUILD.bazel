@@ -16,6 +16,15 @@ cf_cc_library(
 )
 
 cf_cc_library(
+    name = "partition_source",
+    srcs = ["partition_source.cc"],
+    hdrs = ["partition_source.h"],
+    deps = [
+        "@fmt",
+    ],
+)
+
+cf_cc_library(
     name = "partition_type",
     srcs = ["partition_type.cc"],
     hdrs = ["partition_type.h"],
