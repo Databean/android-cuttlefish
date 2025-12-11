@@ -58,6 +58,23 @@ cf_cc_library(
 )
 
 cf_cc_library(
+    name = "android_dist_build",
+    srcs = ["android_dist_build.cc"],
+    hdrs = ["android_dist_build.h"],
+    deps = [
+        "//cuttlefish/common/libs/utils:files",
+        "//cuttlefish/common/libs/utils:result",
+        "//cuttlefish/host/commands/assemble_cvd/android_build",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:android_product_dir",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:image_provider",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:img_zip",
+        "//cuttlefish/host/commands/assemble_cvd/android_build:target_files",
+        "@abseil-cpp//absl/strings:str_format",
+        "@fmt",
+    ],
+)
+
+cf_cc_library(
     name = "fetched_android_build",
     srcs = ["fetched_android_build.cc"],
     hdrs = ["fetched_android_build.h"],
