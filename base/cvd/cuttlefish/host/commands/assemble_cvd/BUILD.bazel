@@ -427,6 +427,7 @@ cf_cc_library(
     srcs = ["instance_image_files.cc"],
     hdrs = ["instance_image_files.h"],
     deps = [
+        "//cuttlefish/host/commands/assemble_cvd/disk:boot_image",
         "//cuttlefish/host/commands/assemble_cvd/disk:image_file",
         "//cuttlefish/host/commands/assemble_cvd/disk:metadata_image",
         "//cuttlefish/host/commands/assemble_cvd/disk:misc_image",

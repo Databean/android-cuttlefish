@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "cuttlefish/host/commands/assemble_cvd/disk/boot_image.h"
 #include "cuttlefish/host/commands/assemble_cvd/disk/image_file.h"
 #include "cuttlefish/host/commands/assemble_cvd/disk/metadata_image.h"
 #include "cuttlefish/host/commands/assemble_cvd/disk/misc_image.h"
@@ -33,6 +34,7 @@ std::vector<std::vector<std::unique_ptr<ImageFile>>> InstanceImageFiles(
     std::vector<std::unique_ptr<ImageFile>>& instance_image_files =
         image_files.emplace_back();
 
+    instance_image_files.emplace_back(std::make_unique<BootImage>(instance));
     instance_image_files.emplace_back(
         std::make_unique<MetadataImage>(instance));
     instance_image_files.emplace_back(std::make_unique<MiscImage>(instance));

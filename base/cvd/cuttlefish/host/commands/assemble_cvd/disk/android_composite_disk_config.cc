@@ -91,7 +91,7 @@ Result<std::vector<ImagePartition>> AndroidCompositeDiskConfig(
   };
 
   const std::map<std::string_view, std::string> primary_paths = {
-      {kPartitions.boot, instance.new_boot_image()},
+      {kPartitions.boot, ""},
       {kPartitions.init_boot, instance.init_boot_image()},
       {kPartitions.metadata, ""},
       {kPartitions.misc, ""},

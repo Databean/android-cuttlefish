@@ -64,6 +64,17 @@ cf_cc_library(
 )
 
 cf_cc_library(
+    name = "boot_image",
+    srcs = ["boot_image.cc"],
+    hdrs = ["boot_image.h"],
+    deps = [
+        "//cuttlefish/host/commands/assemble_cvd/disk:image_file",
+        "//cuttlefish/host/libs/config:cuttlefish_config",
+        "//cuttlefish/result",
+    ],
+)
+
+cf_cc_library(
     name = "bootloader_present",
     srcs = ["bootloader_present.cc"],
     hdrs = ["bootloader_present.h"],
