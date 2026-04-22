@@ -93,6 +93,7 @@ cf_cc_library(
         "//cuttlefish/io:read_window_view",
         "//cuttlefish/result:expect",
         "//cuttlefish/result:result_type",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -198,6 +199,7 @@ cf_cc_library(
         "//cuttlefish/io:filesystem",
         "//cuttlefish/result:expect",
         "//cuttlefish/result:result_type",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -293,6 +295,7 @@ cf_cc_library(
     hdrs = ["native_filesystem.h"],
     deps = [
         "//cuttlefish/common/libs/fs",
+        "//cuttlefish/common/libs/utils:files",
         "//cuttlefish/io",
         "//cuttlefish/io:filesystem",
         "//cuttlefish/io:shared_fd",

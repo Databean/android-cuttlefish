@@ -21,6 +21,8 @@
 
 #include <string_view>
 
+#include "cuttlefish/common/libs/utils/files.h"
+
 #include "cuttlefish/common/libs/fs/shared_fd.h"
 #include "cuttlefish/io/shared_fd.h"
 #include "cuttlefish/posix/strerror.h"
@@ -64,6 +66,11 @@ Result<std::unique_ptr<ReaderWriterSeeker>> NativeFilesystem::OpenReadWrite(
   CF_EXPECTF(fd->IsOpen(), "Failed to open '{}' with O_RDWR: '{}'", path,
              fd->StrError());
   return std::make_unique<SharedFdIo>(fd);
+}
+
+Result<std::vector<std::string>> NativeFilesystem::ListDirectory(
+    std::string_view path) {
+  return CF_EXPECT(DirectoryContents(std::string(path)));
 }
 
 }  // namespace cuttlefish

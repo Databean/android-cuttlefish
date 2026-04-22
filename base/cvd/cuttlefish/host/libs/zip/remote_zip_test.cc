@@ -139,5 +139,7 @@ TEST(RemoteZipTest, TwoFiles) {
   ASSERT_THAT(ReadToString(**file_b), IsOkAndValue("def"));
 }
 
+
+
 }  // namespace
 }  // namespace cuttlefish

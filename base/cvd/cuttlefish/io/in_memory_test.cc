@@ -84,4 +84,20 @@ TEST(InMemoryIoTest, WriteWriteReadAt) {
   ASSERT_EQ(absl::StrCat(str, str), data_read);
 }
 
+TEST(InMemoryFilesystemTest, ListDirectory) {
+  std::unique_ptr<ReadWriteFilesystem> fs = InMemoryFilesystem();
+
+  ASSERT_THAT(fs->CreateFile("/a/b"), IsOk());
+  ASSERT_THAT(fs->CreateFile("/a/c/d"), IsOk());
+  ASSERT_THAT(fs->CreateFile("/a/e"), IsOk());
+
+  Result<std::vector<std::string>> entries = fs->ListDirectory("/a");
+  ASSERT_THAT(entries, IsOk());
+  EXPECT_THAT(*entries, testing::UnorderedElementsAre("b", "c", "e"));
+
+  entries = fs->ListDirectory("/a/c");
+  ASSERT_THAT(entries, IsOk());
+  EXPECT_THAT(*entries, testing::UnorderedElementsAre("d"));
+}
+
 }  // namespace cuttlefish

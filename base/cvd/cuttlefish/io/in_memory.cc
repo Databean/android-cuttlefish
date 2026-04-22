@@ -22,10 +22,12 @@
 #include <functional>
 #include <map>
 #include <mutex>
-#include <shared_mutex>
+#include <set>
+
 #include <utility>
 #include <vector>
 
+#include "absl/strings/strip.h"
 #include "cuttlefish/result/expect.h"
 #include "cuttlefish/result/result_type.h"
 
@@ -34,7 +36,7 @@ namespace {
 
 class InMemoryIo : public ReaderWriterSeeker {
  public:
-  InMemoryIo(std::vector<char>& data, std::shared_mutex& mutex)
+  InMemoryIo(std::vector<char>& data, std::mutex& mutex)
       : data_(data), mutex_(mutex) {}
 
   Result<uint64_t> Read(void* buf, uint64_t count) override {
@@ -81,7 +83,7 @@ class InMemoryIo : public ReaderWriterSeeker {
 
   Result<uint64_t> PRead(void* buf, uint64_t count,
                          uint64_t offset) const override {
-    std::shared_lock lock(mutex_);
+    std::lock_guard lock(mutex_);
     uint64_t to_read = ClampRange(offset, count);
     if (to_read > 0) {
       memcpy(buf, &data_[offset], to_read);
@@ -117,7 +119,7 @@ class InMemoryIo : public ReaderWriterSeeker {
 
   std::vector<char>& data_;
   uint64_t cursor_ = 0;
-  std::shared_mutex& mutex_;
+  std::mutex& mutex_;
 };
 
 class OwningInMemoryIo : public InMemoryIo {
@@ -128,7 +130,7 @@ class OwningInMemoryIo : public InMemoryIo {
 
  private:
   std::vector<char> data_;
-  std::shared_mutex mutex_;
+  std::mutex mutex_;
 };
 
 class InMemoryFilesystemImpl : public ReadWriteFilesystem {
@@ -140,6 +142,25 @@ class InMemoryFilesystemImpl : public ReadWriteFilesystem {
 
   Result<uint32_t> FileAttributes(std::string_view path) const override {
     return 0644;
+  }
+
+  Result<std::vector<std::string>> ListDirectory(
+      std::string_view path) override {
+    std::lock_guard lock(mutex_);
+    std::set<std::string> entries;
+    std::string prefix = std::string(path);
+    if (!prefix.empty() && prefix.back() != '/') {
+      prefix += "/";
+    }
+
+    for (const auto& [file_path, _] : files_) {
+      std::string_view rest = file_path;
+      if (absl::ConsumePrefix(&rest, prefix)) {
+        std::string_view::size_type slash_pos = rest.find('/');
+        entries.emplace(rest.substr(0, slash_pos));
+      }
+    }
+    return std::vector<std::string>(entries.begin(), entries.end());
   }
 
   Result<std::unique_ptr<ReaderWriterSeeker>> CreateFile(
@@ -170,7 +191,7 @@ class InMemoryFilesystemImpl : public ReadWriteFilesystem {
  private:
   // TODO: schuffelen - add per-file mutexes
   std::map<std::string, std::vector<char>, std::less<void>> files_;
-  std::shared_mutex mutex_;
+  std::mutex mutex_;
 };
 
 }  // namespace

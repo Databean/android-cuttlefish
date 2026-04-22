@@ -21,10 +21,13 @@
 #include <sys/types.h>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
+#include "absl/strings/strip.h"
 #include "zip.h"
 
 #include "cuttlefish/host/libs/zip/libzip_cc/error.h"
@@ -144,6 +147,26 @@ Result<uint32_t> ReadableZip::FileAttributes(std::string_view path) const {
   uint32_t attributes = CF_EXPECT(EntryAttributes(index));
   uint32_t mode = (attributes >> 16) & 0777;
   return mode;
+}
+
+Result<std::vector<std::string>> ReadableZip::ListDirectory(
+    std::string_view path) {
+  std::set<std::string> entries;
+  std::string prefix = std::string(path);
+  if (!prefix.empty() && prefix.back() != '/') {
+    prefix += "/";
+  }
+
+  uint64_t num_entries = CF_EXPECT(NumEntries());
+  for (uint64_t i = 0; i < num_entries; ++i) {
+    std::string name = CF_EXPECT(EntryName(i));
+    std::string_view rest = name;
+    if (absl::ConsumePrefix(&rest, prefix)) {
+      std::string_view::size_type slash_pos = rest.find('/');
+      entries.emplace(rest.substr(0, slash_pos));
+    }
+  }
+  return std::vector<std::string>(entries.begin(), entries.end());
 }
 
 ReadableZip::ReadableZip(ManagedZip raw, WritableZipSource source)

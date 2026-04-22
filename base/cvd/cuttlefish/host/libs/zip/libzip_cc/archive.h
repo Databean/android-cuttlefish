@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "cuttlefish/host/libs/zip/libzip_cc/managed.h"
 #include "cuttlefish/host/libs/zip/libzip_cc/readable_source.h"
@@ -57,6 +58,9 @@ class ReadableZip : public ReadFilesystem {
       std::string_view path) override;
 
   Result<uint32_t> FileAttributes(std::string_view path) const override;
+
+  Result<std::vector<std::string>> ListDirectory(
+      std::string_view path) override;
 
  protected:
   ReadableZip(ManagedZip, WritableZipSource);

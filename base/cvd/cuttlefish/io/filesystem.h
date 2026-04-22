@@ -19,7 +19,9 @@
 
 #include <stdint.h>
 
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "cuttlefish/result/result_type.h"
 
@@ -33,6 +35,9 @@ class ReadFilesystem {
       std::string_view path) = 0;
 
   virtual Result<uint32_t> FileAttributes(std::string_view path) const = 0;
+
+  virtual Result<std::vector<std::string>> ListDirectory(
+      std::string_view path) = 0;
 };
 
 class ReadWriteFilesystem : public ReadFilesystem {

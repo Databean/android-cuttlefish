@@ -19,8 +19,10 @@
 #include <string.h>
 
 #include <charconv>
+#include <set>
 #include <string_view>
 
+#include "absl/strings/strip.h"
 #include "cuttlefish/common/libs/utils/size_utils.h"
 #include "cuttlefish/io/read_exact.h"
 #include "cuttlefish/io/read_window_view.h"
@@ -285,6 +287,24 @@ Result<uint32_t> CpioReader::FileAttributes(std::string_view path) const {
   auto it = entries_.find(path);
   CF_EXPECTF(it != entries_.end(), "File not found in cpio: '{}'", path);
   return it->second.mode;
+}
+
+Result<std::vector<std::string>> CpioReader::ListDirectory(
+    std::string_view path) {
+  std::set<std::string> entries;
+  std::string prefix = std::string(path);
+  if (!prefix.empty() && prefix.back() != '/') {
+    prefix += "/";
+  }
+
+  for (const auto& [file_path, _] : entries_) {
+    std::string_view rest = file_path;
+    if (absl::ConsumePrefix(&rest, prefix)) {
+      std::string_view::size_type slash_pos = rest.find('/');
+      entries.emplace(rest.substr(0, slash_pos));
+    }
+  }
+  return std::vector<std::string>(entries.begin(), entries.end());
 }
 
 }  // namespace cuttlefish

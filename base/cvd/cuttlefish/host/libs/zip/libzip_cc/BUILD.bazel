@@ -1,4 +1,4 @@
-load("//cuttlefish/bazel:rules.bzl", "cf_cc_library")
+load("//cuttlefish/bazel:rules.bzl", "cf_cc_library", "cf_cc_test")
 
 package(
     default_visibility = ["//:android_cuttlefish"],
@@ -23,6 +23,7 @@ cf_cc_library(
         "//cuttlefish/io",
         "//cuttlefish/io:filesystem",
         "//cuttlefish/result",
+        "@abseil-cpp//absl/strings",
         "@libzip",
         "@zlib",
     ],
@@ -115,5 +116,17 @@ cf_cc_library(
         "//cuttlefish/result",
         "@libzip",
         "@zlib",
+    ],
+)
+
+cf_cc_test(
+    name = "archive_test",
+    srcs = ["archive_test.cc"],
+    deps = [
+        "//cuttlefish/host/libs/zip:zip_string",
+        "//cuttlefish/host/libs/zip/libzip_cc:archive",
+        "//cuttlefish/host/libs/zip/libzip_cc:writable_source",
+        "//cuttlefish/result",
+        "//cuttlefish/result:result_matchers",
     ],
 )

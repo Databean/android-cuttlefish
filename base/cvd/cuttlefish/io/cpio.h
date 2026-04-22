@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "cuttlefish/io/filesystem.h"
 #include "cuttlefish/io/io.h"
@@ -40,6 +41,9 @@ class CpioReader : public ReadFilesystem {
       std::string_view path) override;
 
   Result<uint32_t> FileAttributes(std::string_view path) const override;
+
+  Result<std::vector<std::string>> ListDirectory(
+      std::string_view path) override;
 
  private:
   struct FileEntry {

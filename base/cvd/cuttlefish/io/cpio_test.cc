@@ -293,5 +293,76 @@ TEST(CpioReaderTest, ReadMultipleFiles) {
   EXPECT_THAT(ReadToString(*file2), IsOkAndValue("Goodbye World\n"));
 }
 
+TEST(CpioReaderTest, ListDirectory) {
+  std::string archive;
+
+  // File 1: dir/file1
+  archive += "070701";    // magic
+  archive += "00000001";  // ino
+  archive += "000081a4";  // mode (reg file, 0644)
+  archive += "00000000";  // uid
+  archive += "00000000";  // gid
+  archive += "00000001";  // nlink
+  archive += "00000000";  // mtime
+  archive += "0000000c";  // filesize (12)
+  archive += "00000000";  // maj
+  archive += "00000000";  // min
+  archive += "00000000";  // rmaj
+  archive += "00000000";  // rmin
+  archive += "0000000a";  // namesize (10)
+  archive += "00000000";  // chksum
+  archive += "dir/file1";
+  archive += '\0';
+  archive += "Hello World\n";
+
+  // File 2: dir/file2
+  archive += "070701";    // magic
+  archive += "00000002";  // ino
+  archive += "000081a4";  // mode (reg file, 0644)
+  archive += "00000000";  // uid
+  archive += "00000000";  // gid
+  archive += "00000001";  // nlink
+  archive += "00000000";  // mtime
+  archive += "0000000c";  // filesize (12)
+  archive += "00000000";  // maj
+  archive += "00000000";  // min
+  archive += "00000000";  // rmaj
+  archive += "00000000";  // rmin
+  archive += "0000000a";  // namesize (10)
+  archive += "00000000";  // chksum
+  archive += "dir/file2";
+  archive += '\0';
+  archive += "Hello World\n";
+
+  // Trailer
+  archive += "070701";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "00000000";
+  archive += "0000000b";  // namesize (11)
+  archive += "00000000";
+  archive += "TRAILER!!!";
+  archive += '\0';
+  archive += std::string(3, '\0');
+
+  std::unique_ptr<ReaderWriterSeeker> io = InMemoryIo(archive);
+  Result<std::unique_ptr<CpioReader>> reader_result =
+      CpioReader::Open(std::move(io));
+  ASSERT_THAT(reader_result, IsOk());
+  std::unique_ptr<CpioReader> reader = std::move(*reader_result);
+
+  Result<std::vector<std::string>> entries = reader->ListDirectory("dir");
+  ASSERT_THAT(entries, IsOk());
+  EXPECT_THAT(*entries, testing::UnorderedElementsAre("file1", "file2"));
+}
+
 }  // namespace
 }  // namespace cuttlefish

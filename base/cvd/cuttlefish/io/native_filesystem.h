@@ -17,7 +17,9 @@
 
 #include <stdint.h>
 
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "cuttlefish/io/filesystem.h"
 #include "cuttlefish/io/io.h"
@@ -31,6 +33,9 @@ class NativeFilesystem : public ReadWriteFilesystem {
       std::string_view path) override;
 
   Result<uint32_t> FileAttributes(std::string_view path) const override;
+
+  Result<std::vector<std::string>> ListDirectory(
+      std::string_view path) override;
 
   Result<std::unique_ptr<ReaderWriterSeeker>> CreateFile(
       std::string_view path) override;

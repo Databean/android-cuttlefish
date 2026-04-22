@@ -51,6 +51,13 @@ Result<uint32_t> ChrootReadWriteFilesystem::FileAttributes(
                     "Failed for '{}' (actually '{}')", path, real_path);
 }
 
+Result<std::vector<std::string>> ChrootReadWriteFilesystem::ListDirectory(
+    std::string_view path) {
+  std::string real_path = CF_EXPECT(ChrootToRealPath(path));
+  return CF_EXPECTF(real_filesystem_->ListDirectory(real_path),
+                    "Failed for '{}' (actually '{}')", path, real_path);
+}
+
 Result<std::unique_ptr<ReaderWriterSeeker>>
 ChrootReadWriteFilesystem::CreateFile(std::string_view path) {
   std::string real_path = CF_EXPECT(ChrootToRealPath(path));
