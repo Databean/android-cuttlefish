@@ -160,10 +160,6 @@ bool SharedFD::Pipe(SharedFD* fd0, SharedFD* fd1) {
 }
 
 #ifdef __linux__
-SharedFD SharedFD::Event(int initval, int flags) {
-  return Fd::Event(initval, flags);
-}
-
 SharedFD SharedFD::ShmOpen(const std::string& name, int oflag, int mode) {
   return Fd::ShmOpen(name, oflag, mode);
 }

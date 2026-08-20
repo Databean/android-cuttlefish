@@ -157,8 +157,10 @@ bool Fd::Pipe(Fd* fd0, Fd* fd1) {
 }
 
 #ifdef __linux__
-Fd Fd::Event(int initval, int flags) {
+Result<Fd> Fd::Event(int initval, int flags) {
   int fd = eventfd(initval, flags);
+  CF_EXPECTF(fd > 0, "eventfd({}, {}) failed: {}", initval, flags,
+             ::cuttlefish::StrError(errno));
   return Fd(fd, errno);
 }
 

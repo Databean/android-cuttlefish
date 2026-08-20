@@ -134,7 +134,7 @@ class Fd : public ReaderWriterSeeker {
                                               int protocol);
 
 #ifdef __linux__
-  static Fd Event(int initval = 0, int flags = 0);
+  static Result<Fd> Event(int initval = 0, int flags = 0);
   static Fd InotifyFd();
   static Fd ShmOpen(const std::string& name, int oflag, int mode);
   // For binding in vsock, svm_cid from `cid` param would be either

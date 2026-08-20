@@ -425,10 +425,7 @@ Result<void> CvdStartCommandHandler::Handle(const CommandRequest& request) {
     CF_EXPECT(memfd->IsOpen(), "Failed to create memfd for subprocess output: "
                                    << memfd->StrError());
 
-    stop_eventfd = SharedFD::Event();
-    CF_EXPECT(stop_eventfd->IsOpen(),
-              "Failed to create eventfd for stopping monitor: "
-                  << stop_eventfd->StrError());
+    stop_eventfd = CF_EXPECT(Fd::Event());
   }
 
   Command command = CF_EXPECT(ConstructCvdNonHelpCommand(
