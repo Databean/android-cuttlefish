@@ -443,7 +443,7 @@ func (h *GceHelper) cleanupDetachDisk(ins, disk string) {
 func WaitForInstance(project, zone, ins string) error {
 	for attempt := 0; attempt < 10; attempt++ {
 		time.Sleep(30 * time.Second)
-		if err := RunCmdWithOpts(project, zone, ins, "uptime", RunCmdOpts{PrintOutput: false}); err == nil {
+		if err := RunCmdWithOpts(project, zone, ins, "uptime", RunCmdOpts{PrintOutput: true}); err == nil {
 			return nil
 		}
 	}
@@ -468,11 +468,11 @@ func UploadBashScript(project, zone, ins, scriptName, scriptContent string) erro
 }
 
 func UploadFile(project, zone, ins, src string, dst string) error {
-	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "scp", "--project", project, "--zone", zone, "--tunnel-through-iap", src, ins+":"+dst)
+	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "scp", "--project", project, "--zone", zone, "--tunnel-through-iap", "--scp-flag=-o StrictHostKeyChecking=no", "--scp-flag=-o UserKnownHostsFile=/dev/null", src, ins+":"+dst)
 }
 
 func RunCmd(project, zone, ins, cmd string) error {
-	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, "--tunnel-through-iap", ins, "--command", cmd)
+	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, "--tunnel-through-iap", "--ssh-flag=-o StrictHostKeyChecking=no", "--ssh-flag=-o UserKnownHostsFile=/dev/null", ins, "--command", cmd)
 }
 
 type RunCmdOpts struct {
@@ -480,7 +480,7 @@ type RunCmdOpts struct {
 }
 
 func RunCmdWithOpts(project, zone, ins, cmd string, opts RunCmdOpts) error {
-	return runCmd(opts, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, "--tunnel-through-iap", ins, "--command", cmd)
+	return runCmd(opts, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, "--tunnel-through-iap", "--ssh-flag=-o StrictHostKeyChecking=no", "--ssh-flag=-o UserKnownHostsFile=/dev/null", ins, "--command", cmd)
 }
 
 func runCmd(opts RunCmdOpts, name string, args ...string) error {
