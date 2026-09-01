@@ -468,11 +468,11 @@ func UploadBashScript(project, zone, ins, scriptName, scriptContent string) erro
 }
 
 func UploadFile(project, zone, ins, src string, dst string) error {
-	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "scp", "--project", project, "--zone", zone, src, ins+":"+dst)
+	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "scp", "--project", project, "--zone", zone, "--tunnel-through-iap", src, ins+":"+dst)
 }
 
 func RunCmd(project, zone, ins, cmd string) error {
-	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, ins, "--command", cmd)
+	return runCmd(RunCmdOpts{PrintOutput: true}, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, "--tunnel-through-iap", ins, "--command", cmd)
 }
 
 type RunCmdOpts struct {
@@ -480,7 +480,7 @@ type RunCmdOpts struct {
 }
 
 func RunCmdWithOpts(project, zone, ins, cmd string, opts RunCmdOpts) error {
-	return runCmd(opts, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, ins, "--command", cmd)
+	return runCmd(opts, "gcloud", "compute", "ssh", "--project", project, "--zone", zone, "--tunnel-through-iap", ins, "--command", cmd)
 }
 
 func runCmd(opts RunCmdOpts, name string, args ...string) error {
